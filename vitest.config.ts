@@ -12,14 +12,11 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reportsDirectory: './coverage',
-      include: ['src/**/*.{ts,tsx}'],
-      exclude: [
-        'src/**/*.{test,spec}.{ts,tsx}',
-        'src/**/*.d.ts',
-        'src/types/**',
-        'src/app/**/layout.tsx',
-        'src/app/**/page.tsx',
-      ],
+      // Gate business logic: pure utils, hooks, and server data helpers. UI
+      // components, provider wiring, and wagmi config are covered at the E2E /
+      // build level, not by unit coverage (see docs/TESTING.md).
+      include: ['src/lib/**/*.ts', 'src/hooks/**/*.ts', 'src/config/chains.ts'],
+      exclude: ['src/**/*.{test,spec}.{ts,tsx}', 'src/**/*.d.ts', 'src/lib/providers.tsx'],
       thresholds: {
         lines: 80,
         functions: 80,
