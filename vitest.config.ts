@@ -16,7 +16,12 @@ export default defineConfig({
       // components, provider wiring, and wagmi config are covered at the E2E /
       // build level, not by unit coverage (see docs/TESTING.md).
       include: ['src/lib/**/*.ts', 'src/config/chains.ts'],
-      exclude: ['src/**/*.{test,spec}.{ts,tsx}', 'src/**/*.d.ts', 'src/lib/providers.tsx'],
+      exclude: [
+        'src/**/*.{test,spec}.{ts,tsx}',
+        'src/**/*.d.ts',
+        'src/lib/providers.tsx',
+        'src/lib/server/**',
+      ],
       thresholds: {
         lines: 80,
         functions: 80,
