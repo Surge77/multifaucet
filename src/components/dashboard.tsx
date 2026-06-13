@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
 
+import { FaucetCard } from '@/components/faucet/faucet-card';
 import { ChainSwitcher } from '@/components/wallet/chain-switcher';
 import { WrongNetworkBanner } from '@/components/wallet/wrong-network-banner';
-import { getChain } from '@/config/chains';
 import { shortenAddress } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
@@ -18,8 +18,7 @@ const MODES: { id: Mode; label: string }[] = [
 
 export function Dashboard() {
   const [mode, setMode] = useState<Mode>('faucet');
-  const { address, chainId, isConnected } = useAccount();
-  const chain = chainId !== undefined ? getChain(chainId) : undefined;
+  const { address, isConnected } = useAccount();
 
   return (
     <section className="mx-auto w-full max-w-5xl px-4 py-8">
@@ -56,16 +55,7 @@ export function Dashboard() {
         {!isConnected ? (
           <EmptyState />
         ) : mode === 'faucet' ? (
-          <PanelStub
-            title="Faucet"
-            line={
-              chain?.faucet
-                ? `Faucet ready on ${chain.name}. Claim flow lands in the next phase.`
-                : chain?.kind === 'testnet'
-                  ? `No faucet deployed yet on ${chain.name}.`
-                  : `Switch to a testnet to claim MFT.`
-            }
-          />
+          <FaucetCard />
         ) : (
           <PanelStub
             title="Portfolio"

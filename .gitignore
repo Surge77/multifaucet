@@ -42,3 +42,7 @@ next-env.d.ts
 
 # Windows bash crash dumps
 *.stackdump
+
+# Playwright MCP artifacts
+.playwright-mcp/
+*.png
