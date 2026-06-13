@@ -62,8 +62,14 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
+      - name: Format check
+        run: forge fmt --check
+
       - name: Build
         run: forge build --sizes
 
-      - name: Test + coverage
-        run: forge test -vvv && forge coverage --report summary
+      - name: Test
+        run: forge test -vvv
+
+      - name: Coverage (faucet sources must stay 100%)
+        run: forge coverage --no-match-coverage "(script|test)" --report summary

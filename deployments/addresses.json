@@ -1,0 +1,17 @@
+{
+  "11155111": {
+    "chainName": "sepolia",
+    "token": "",
+    "faucet": ""
+  },
+  "84532": {
+    "chainName": "base-sepolia",
+    "token": "",
+    "faucet": ""
+  },
+  "421614": {
+    "chainName": "arbitrum-sepolia",
+    "token": "",
+    "faucet": ""
+  }
+}
