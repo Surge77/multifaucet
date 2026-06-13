@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { useAccount } from 'wagmi';
 
 import { FaucetCard } from '@/components/faucet/faucet-card';
+import { PortfolioPanel } from '@/components/portfolio/portfolio-panel';
 import { ChainSwitcher } from '@/components/wallet/chain-switcher';
 import { WrongNetworkBanner } from '@/components/wallet/wrong-network-banner';
-import { shortenAddress } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 type Mode = 'faucet' | 'portfolio';
@@ -18,7 +18,7 @@ const MODES: { id: Mode; label: string }[] = [
 
 export function Dashboard() {
   const [mode, setMode] = useState<Mode>('faucet');
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
 
   return (
     <section className="mx-auto w-full max-w-5xl px-4 py-8">
@@ -52,16 +52,7 @@ export function Dashboard() {
       </div>
 
       <div role="tabpanel" className="mt-6">
-        {!isConnected ? (
-          <EmptyState />
-        ) : mode === 'faucet' ? (
-          <FaucetCard />
-        ) : (
-          <PanelStub
-            title="Portfolio"
-            line={`Reading balances for ${address ? shortenAddress(address) : 'your wallet'} — live data lands in the portfolio phase.`}
-          />
-        )}
+        {mode === 'faucet' ? isConnected ? <FaucetCard /> : <EmptyState /> : <PortfolioPanel />}
       </div>
     </section>
   );
@@ -70,16 +61,7 @@ export function Dashboard() {
 function EmptyState() {
   return (
     <div className="rounded-2xl border border-dashed border-black/15 p-10 text-center text-neutral-500 dark:border-white/15">
-      Connect a wallet to claim testnet tokens or view your portfolio.
-    </div>
-  );
-}
-
-function PanelStub({ title, line }: { title: string; line: string }) {
-  return (
-    <div className="rounded-2xl border border-black/10 p-6 dark:border-white/10">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">{line}</p>
+      Connect a wallet to claim testnet tokens.
     </div>
   );
 }
