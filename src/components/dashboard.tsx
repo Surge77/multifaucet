@@ -32,11 +32,13 @@ export function Dashboard() {
         {MODES.map(({ id, label }) => (
           <button
             key={id}
+            id={`tab-${id}`}
             role="tab"
             aria-selected={mode === id}
+            aria-controls="dashboard-panel"
             onClick={() => setMode(id)}
             className={cn(
-              'rounded-lg px-4 py-1.5 text-sm font-medium transition-colors',
+              'rounded-lg px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
               mode === id
                 ? 'bg-violet-600 text-white'
                 : 'text-neutral-600 hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/10',
@@ -51,7 +53,13 @@ export function Dashboard() {
         <ChainSwitcher />
       </div>
 
-      <div role="tabpanel" className="mt-6">
+      <div
+        id="dashboard-panel"
+        role="tabpanel"
+        aria-labelledby={`tab-${mode}`}
+        tabIndex={0}
+        className="mt-6 focus-visible:outline-none"
+      >
         {mode === 'faucet' ? isConnected ? <FaucetCard /> : <EmptyState /> : <PortfolioPanel />}
       </div>
     </section>

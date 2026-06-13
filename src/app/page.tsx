@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <>
       <SiteHeader />
-      <main className="flex-1">
+      <main id="main" className="flex-1">
         <section className="mx-auto max-w-5xl px-4 pt-12 pb-2 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
             Fund testnets. Watch mainnets.
