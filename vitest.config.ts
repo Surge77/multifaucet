@@ -12,9 +12,6 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reportsDirectory: './coverage',
-      // Measure only files exercised by tests; keeps the 80% gate meaningful as
-      // modules land, instead of failing on yet-untested boilerplate.
-      all: false,
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/**/*.{test,spec}.{ts,tsx}',
