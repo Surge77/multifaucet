@@ -90,3 +90,20 @@ test('portfolio surfaces an error when the API fails', async ({ page }) => {
 
   await expect(page.getByText(/couldn.t load balances/i)).toBeVisible();
 });
+
+test('watchlist persists a saved address across reloads', async ({ page }) => {
+  await stubPortfolioApi(page);
+  await page.goto('/');
+
+  await page.getByRole('tab', { name: 'Portfolio' }).click();
+  await page.getByLabel('Address').fill(VALID_ADDRESS);
+  await page.getByRole('button', { name: 'Save address' }).click();
+
+  await page.reload();
+  await page.getByRole('tab', { name: 'Portfolio' }).click();
+
+  const chip = page.getByRole('button', { name: '0x1111…1111' });
+  await expect(chip).toBeVisible();
+  await chip.click();
+  await expect(page.getByLabel('Address')).toHaveValue(VALID_ADDRESS);
+});
