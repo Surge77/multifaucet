@@ -1,7 +1,11 @@
 import { SUPPORTED_CHAINS } from '@/config/chains';
 
+import { ALCHEMY_NETWORK } from './rpc';
+
 const REQUEST_TIMEOUT_MS = 5_000;
 const REVALIDATE_SECONDS = 60;
+/** Alchemy caps by-address price requests at 25 tokens. */
+const MAX_PRICE_ADDRESSES = 25;
 
 /**
  * CoinGecko id <-> ticker symbol map, derived from the chain registry so it
@@ -56,6 +60,47 @@ export async function fetchAlchemyPrices(ids: string[]): Promise<Record<string, 
     const id = entry.symbol ? symbolToId.get(entry.symbol.toUpperCase()) : undefined;
     const usd = entry.prices?.find((p) => p.currency === 'usd')?.value;
     if (id && usd != null && Number.isFinite(Number(usd))) prices[id] = Number(usd);
+  }
+  return prices;
+}
+
+interface AlchemyAddressPriceEntry {
+  address?: string;
+  prices?: { currency?: string; value?: string }[];
+}
+
+/**
+ * USD prices for arbitrary token contract addresses on `chainId` via Alchemy's
+ * Prices `by-address` API. Used to price auto-discovered tokens that have no
+ * CoinGecko id. Returns `{}` (keyed by lowercased address) on any failure.
+ */
+export async function fetchAlchemyPricesByAddress(
+  chainId: number,
+  addresses: string[],
+): Promise<Record<string, number>> {
+  const key = process.env.ALCHEMY_API_KEY;
+  const network = ALCHEMY_NETWORK[chainId];
+  if (!key || !network || addresses.length === 0) return {};
+
+  const url = `https://api.g.alchemy.com/prices/v1/${key}/tokens/by-address`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      addresses: addresses.slice(0, MAX_PRICE_ADDRESSES).map((address) => ({ network, address })),
+    }),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    next: { revalidate: REVALIDATE_SECONDS },
+  });
+  if (!res.ok) return {};
+
+  const body = (await res.json()) as { data?: AlchemyAddressPriceEntry[] };
+  const prices: Record<string, number> = {};
+  for (const entry of body.data ?? []) {
+    const usd = entry.prices?.find((p) => p.currency === 'usd')?.value;
+    if (entry.address && usd != null && Number.isFinite(Number(usd))) {
+      prices[entry.address.toLowerCase()] = Number(usd);
+    }
   }
   return prices;
 }

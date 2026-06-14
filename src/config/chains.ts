@@ -1,5 +1,14 @@
 import type { Address } from 'viem';
-import { arbitrum, arbitrumSepolia, base, baseSepolia, mainnet, sepolia } from 'viem/chains';
+import {
+  arbitrum,
+  arbitrumSepolia,
+  base,
+  baseSepolia,
+  mainnet,
+  optimism,
+  polygon,
+  sepolia,
+} from 'viem/chains';
 
 import type { FaucetDeployment, SupportedChain, TokenMeta } from '@/types';
 import deployments from '../../deployments/addresses.json';
@@ -84,6 +93,33 @@ export const SUPPORTED_CHAINS: readonly SupportedChain[] = [
         coingeckoId: 'arbitrum',
         address: '0x912CE59144191C1204E64559FE8253a0e49E6548',
       },
+    ],
+  },
+
+  {
+    id: optimism.id,
+    name: 'OP Mainnet',
+    shortName: 'OP',
+    kind: 'mainnet',
+    nativeSymbol: 'ETH',
+    nativeCoingeckoId: 'ethereum',
+    explorerUrl: 'https://optimistic.etherscan.io',
+    trackedTokens: [
+      { ...WETH, address: '0x4200000000000000000000000000000000000006' },
+      { ...USDC, address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85' },
+    ],
+  },
+  {
+    id: polygon.id,
+    name: 'Polygon',
+    shortName: 'POL',
+    kind: 'mainnet',
+    nativeSymbol: 'POL',
+    nativeCoingeckoId: 'matic-network',
+    explorerUrl: 'https://polygonscan.com',
+    trackedTokens: [
+      { ...WETH, address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619' },
+      { ...USDC, address: '0x3c499c542cEF5E3811e1192ce70d8cc03d5c3359' },
     ],
   },
 

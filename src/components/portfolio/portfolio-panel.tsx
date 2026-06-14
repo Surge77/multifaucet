@@ -6,13 +6,19 @@ import { type Address, isAddress } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 import { usePortfolio } from '@/hooks/use-portfolio';
 import { buildAllocation } from '@/lib/allocation';
 import { formatUsd, shortenAddress } from '@/lib/format';
+import { addEntry, removeEntry, type WatchEntry } from '@/lib/watchlist';
 
 import { BalanceTable } from './balance-table';
+import { Watchlist } from './watchlist';
 
 const AllocationChart = dynamic(() => import('./allocation-chart'), { ssr: false });
+
+// Stable reference for the localStorage hook's initial value.
+const EMPTY_WATCHLIST: WatchEntry[] = [];
 
 export function PortfolioPanel() {
   const { address: connected } = useAccount();
@@ -23,6 +29,8 @@ export function PortfolioPanel() {
   const validAddress = isAddress(effective) ? (effective as Address) : undefined;
   const { perChain, totalUsd, isLoading, isError } = usePortfolio(validAddress);
   const allocation = useMemo(() => buildAllocation(perChain), [perChain]);
+
+  const [watchlist, setWatchlist] = useLocalStorage<WatchEntry[]>('mf-watchlist', EMPTY_WATCHLIST);
 
   return (
     <div className="rounded-2xl border border-black/10 p-6 dark:border-white/10">
@@ -37,6 +45,14 @@ export function PortfolioPanel() {
         spellCheck={false}
         autoComplete="off"
         className="mt-1 w-full rounded-xl border border-black/10 bg-transparent px-3 py-2 font-mono text-sm outline-none focus:border-violet-500 dark:border-white/15"
+      />
+
+      <Watchlist
+        entries={watchlist}
+        activeAddress={effective}
+        onSelect={setInput}
+        onSave={(label) => validAddress && setWatchlist(addEntry(watchlist, validAddress, label))}
+        onRemove={(address) => setWatchlist(removeEntry(watchlist, address))}
       />
 
       {!validAddress ? (

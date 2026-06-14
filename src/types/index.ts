@@ -59,6 +59,15 @@ export interface FaucetState {
   secondsRemaining: number;
 }
 
+export interface FaucetClaim {
+  txHash: string;
+  /** Drip amount, raw token units as a decimal string. */
+  amount: string;
+  /** Claim time in unix seconds, from the contract event. */
+  timestamp: number;
+  blockNumber: number;
+}
+
 export type TransferDirection = 'in' | 'out' | 'self';
 
 export interface Transfer {
