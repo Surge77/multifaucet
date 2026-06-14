@@ -14,7 +14,7 @@ export default defineConfig({
       reportsDirectory: './coverage',
       // Gate business logic: pure utils, hooks, and server data helpers. UI
       // components, provider wiring, and wagmi config are covered at the E2E /
-      // build level, not by unit coverage (see docs/TESTING.md).
+      // build level, not by unit coverage.
       include: ['src/lib/**/*.ts', 'src/config/chains.ts'],
       exclude: [
         'src/**/*.{test,spec}.{ts,tsx}',

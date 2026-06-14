@@ -11,6 +11,5 @@ and rendered in the root README's supported-chains table.
 | `token` | deployed `MultiFaucetToken` (MFT) address |
 | `faucet` | deployed `TokenFaucet` address |
 
-Addresses are filled in after running `script/Deploy.s.sol` against each testnet
-(see [`docs/CONTRACTS.md`](../docs/CONTRACTS.md)). Empty strings mean "not yet
-deployed".
+Addresses are filled in after running `script/Deploy.s.sol` against each testnet.
+Empty strings mean "not yet deployed".

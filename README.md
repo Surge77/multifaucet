@@ -8,13 +8,12 @@ A production-grade Web3 dashboard that drips testnet ERC-20s from a custom
 on-chain faucet **and** shows a real, read-only multi-chain portfolio with live
 USD values — without ever leaking an API key to the browser.
 
-[Live demo](#) · [Architecture](docs/ARCHITECTURE.md) · [Contracts](docs/CONTRACTS.md) · [Security](docs/SECURITY.md)
+[Live demo](#) · [Security](SECURITY.md)
 
 </div>
 
 > ⚠️ **Status:** under active construction. Deployed addresses and the live demo
-> link land at the end of Phase 2 / deployment. Build order is in
-> [`docs/DECISIONS.md`](docs/DECISIONS.md).
+> link land at the end of Phase 2 / deployment.
 
 ---
 
@@ -80,7 +79,7 @@ public data. MultiFaucet fixes both:
 
 Reads flow through the server (keys hidden, responses cached). Writes are signed
 by the user's wallet and go straight to chain — the server never holds funds or
-keys. Full detail in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+keys.
 
 ## Local setup
 
@@ -135,8 +134,7 @@ Only `NEXT_PUBLIC_*` reaches the browser. See [`.env.example`](.env.example).
 `TokenFaucet` holds a balance of `MFT` and drips a fixed amount per `claim()`,
 gated by a per-address 24h cooldown enforced with `block.timestamp`. It's
 `Ownable` (fund / set drip / withdraw) and `Pausable`. Reverts use custom errors
-(`CooldownActive`, `FaucetEmpty`). Full reference + invariants in
-[`docs/CONTRACTS.md`](docs/CONTRACTS.md).
+(`CooldownActive`, `FaucetEmpty`).
 
 ## Roadmap
 
