@@ -76,10 +76,12 @@ export function useFaucet(): FaucetData {
   const { writeContract, data: txHash, isPending, error: writeError, reset } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({ hash: txHash });
 
-  // Refresh on-chain reads once the claim is mined.
+  // Refresh on-chain reads once the claim is mined. Depend on the stable
+  // refetch fn (not the whole `reads` object) to avoid a refetch loop.
+  const { refetch } = reads;
   useEffect(() => {
-    if (receipt.isSuccess) reads.refetch();
-  }, [receipt.isSuccess, reads]);
+    if (receipt.isSuccess) refetch();
+  }, [receipt.isSuccess, refetch]);
 
   const status: ClaimStatus = writeError
     ? 'error'
