@@ -6,7 +6,7 @@ import { coingeckoIdsSchema } from '@/lib/validation';
 const RATE_LIMIT = 60;
 
 export async function GET(request: Request) {
-  const limited = enforceRateLimit(request, 'prices', RATE_LIMIT);
+  const limited = await enforceRateLimit(request, 'prices', RATE_LIMIT);
   if (limited) return limited;
 
   const { searchParams } = new URL(request.url);

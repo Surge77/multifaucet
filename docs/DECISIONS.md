@@ -99,9 +99,26 @@ across instances on Vercel. (3) Bound transfer scans to ~30 days of blocks.
 Prices as a CoinGecko fallback, reusing the existing key. (6) Structured server
 logging in place of silent `catch {}`.
 
-**Consequences.** No new dependencies or external infrastructure. The rate limit
-is per-instance (best-effort), not a global quota — a distributed limiter would
-need an external store, deferred until traffic justifies it.
+**Consequences.** Caching, price fallback, bounded scans, and logging add no new
+dependencies. Rate limiting gained a distributed backend in ADR-008.
+
+---
+
+## ADR-008 — Distributed rate limiting via Upstash Redis
+
+**Date:** 2026-06-14 · **Status:** accepted
+
+**Context.** The ADR-006 in-memory limiter counts requests per serverless
+instance, so a caller hitting different instances gets N× the intended budget.
+
+**Decision.** Add `@upstash/ratelimit` + `@upstash/redis` (REST, pinned). When
+`UPSTASH_REDIS_REST_URL/TOKEN` are set, limits are a global sliding window shared
+across instances; otherwise — and on any Redis error — it fails open to the
+in-memory limiter, so local dev, tests, and Redis outages still work.
+
+**Consequences.** First external runtime dependency, but optional: the app runs
+without it. Keys are server-only (never `NEXT_PUBLIC_`); the REST token is full
+read/write to that database, so it stays in env/secrets and out of git.
 
 ---
 

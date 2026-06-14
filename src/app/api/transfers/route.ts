@@ -7,7 +7,7 @@ import { addressSchema, chainIdSchema } from '@/lib/validation';
 const RATE_LIMIT = 30;
 
 export async function GET(request: Request) {
-  const limited = enforceRateLimit(request, 'transfers', RATE_LIMIT);
+  const limited = await enforceRateLimit(request, 'transfers', RATE_LIMIT);
   if (limited) return limited;
 
   const { searchParams } = new URL(request.url);

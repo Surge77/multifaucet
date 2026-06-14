@@ -1,10 +1,15 @@
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+import { logError } from './logger';
+
 /**
- * Fixed-window in-memory rate limiter.
+ * Rate limiter with two backends:
  *
- * Best-effort by design: state lives in a single serverless instance, so limits
- * are per-instance, not global. It is a first abuse barrier in front of the
- * metered upstreams (Alchemy / CoinGecko), not a hard quota. A distributed
- * limiter would need an external store, which the locked stack does not include.
+ * - **Upstash Redis** (distributed) when `UPSTASH_REDIS_REST_URL/TOKEN` are set
+ *   — a global quota shared across all serverless instances.
+ * - **In-memory fixed-window** otherwise (local dev, tests) and as a fail-open
+ *   fallback if Redis is unreachable, so an outage never takes down the API.
  */
 interface Window {
   count: number;
@@ -53,4 +58,45 @@ export function rateLimit(
 /** Test-only: drop all window state so cases stay isolated. */
 export function resetRateLimits(): void {
   buckets.clear();
+}
+
+function upstashConfigured(): boolean {
+  return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+}
+
+// One Ratelimit per distinct request budget; the window is otherwise constant.
+const limiters = new Map<number, Ratelimit>();
+
+function getLimiter(limit: number, windowMs: number): Ratelimit {
+  let limiter = limiters.get(limit);
+  if (!limiter) {
+    limiter = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(limit, `${Math.round(windowMs / 1000)} s`),
+      prefix: 'mf-rl',
+    });
+    limiters.set(limit, limiter);
+  }
+  return limiter;
+}
+
+/**
+ * Distributed rate-limit check, falling back to the in-memory limiter when
+ * Upstash is not configured or unreachable.
+ */
+export async function checkRateLimit(
+  key: string,
+  limit: number,
+  windowMs: number,
+): Promise<RateLimitResult> {
+  if (!upstashConfigured()) return rateLimit(key, limit, windowMs);
+
+  try {
+    const { success, reset } = await getLimiter(limit, windowMs).limit(key);
+    if (success) return { ok: true, retryAfterSec: 0 };
+    return { ok: false, retryAfterSec: Math.max(0, Math.ceil((reset - Date.now()) / 1000)) };
+  } catch (error) {
+    logError('ratelimit.upstash', error);
+    return rateLimit(key, limit, windowMs);
+  }
 }

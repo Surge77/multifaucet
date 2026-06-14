@@ -1,6 +1,6 @@
 import { apiError } from '@/lib/api';
 
-import { rateLimit } from './rate-limit';
+import { checkRateLimit } from './rate-limit';
 
 const WINDOW_MS = 60_000;
 
@@ -15,8 +15,12 @@ function clientIp(request: Request): string {
  * Enforce a per-IP, per-route rate limit. Returns a 429 `Response` when the
  * caller is over budget, or `null` to let the handler proceed.
  */
-export function enforceRateLimit(request: Request, route: string, limit: number): Response | null {
-  const result = rateLimit(`${route}:${clientIp(request)}`, limit, WINDOW_MS);
+export async function enforceRateLimit(
+  request: Request,
+  route: string,
+  limit: number,
+): Promise<Response | null> {
+  const result = await checkRateLimit(`${route}:${clientIp(request)}`, limit, WINDOW_MS);
   if (result.ok) return null;
   return Response.json(apiError('RATE_LIMITED', 'Too many requests; slow down'), {
     status: 429,
