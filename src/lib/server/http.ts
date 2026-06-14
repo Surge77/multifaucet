@@ -5,7 +5,7 @@ import { checkRateLimit } from './rate-limit';
 const WINDOW_MS = 60_000;
 
 /** Best-effort client IP from proxy headers; falls back to a shared bucket. */
-function clientIp(request: Request): string {
+export function clientIp(request: Request): string {
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) return forwarded.split(',')[0]!.trim();
   return request.headers.get('x-real-ip')?.trim() || 'unknown';

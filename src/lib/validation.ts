@@ -34,3 +34,10 @@ export const coingeckoIdsSchema = z
   .refine((ids) => ids.every((id) => /^[a-z0-9-]+$/.test(id)), {
     message: 'Ids may only contain lowercase letters, digits, and hyphens',
   });
+
+/** POST body for a faucet claim voucher request. */
+export const faucetVoucherSchema = z.object({
+  address: addressSchema,
+  chainId: chainIdSchema,
+  turnstileToken: z.string().min(1).max(2048),
+});
