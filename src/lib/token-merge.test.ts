@@ -18,12 +18,21 @@ const DISC_A = '0x2222222222222222222222222222222222222222';
 const DISC_B = '0x3333333333333333333333333333333333333333';
 
 describe('mergeTokenBalances', () => {
-  it('sorts by USD value descending with unpriced last', () => {
+  it('sorts by USD value descending and drops unpriced discovered dust', () => {
     const merged = mergeTokenBalances(
       [tb(CURATED, 'CUR', 10)],
       [tb(DISC_A, 'A', 100), tb(DISC_B, 'B', null)],
     );
-    expect(merged.map((t) => t.token.symbol)).toEqual(['A', 'CUR', 'B']);
+    // B (discovered, no USD) is dropped as dust; A and curated CUR remain.
+    expect(merged.map((t) => t.token.symbol)).toEqual(['A', 'CUR']);
+  });
+
+  it('keeps an unpriced curated token but never unpriced discovered ones', () => {
+    const merged = mergeTokenBalances(
+      [tb(CURATED, 'CUR', null)],
+      [tb(DISC_A, 'SPAM', 0), tb(DISC_B, 'SPAM2', null)],
+    );
+    expect(merged.map((t) => t.token.symbol)).toEqual(['CUR']);
   });
 
   it('keeps the curated entry on an address collision (case-insensitive)', () => {
