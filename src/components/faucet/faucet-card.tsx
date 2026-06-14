@@ -1,5 +1,7 @@
 'use client';
 
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
+import { useRef, useState } from 'react';
 import { useAccount } from 'wagmi';
 
 import { useCountdown } from '@/hooks/use-countdown';
@@ -9,12 +11,27 @@ import { formatDuration, formatTokenAmount } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 const FAUCET_DECIMALS = 18;
+// Cloudflare "always passes" test key; real key comes from env in production.
+const TEST_SITE_KEY = '1x00000000000000000000AA';
+const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? TEST_SITE_KEY;
 
 export function FaucetCard() {
   const { chainId } = useAccount();
   const chain = chainId !== undefined ? getChain(chainId) : undefined;
   const faucet = useFaucet();
   const secondsRemaining = useCountdown(faucet.unlockAtMs);
+
+  const turnstileRef = useRef<TurnstileInstance>(null);
+  const [token, setToken] = useState('');
+
+  // A Turnstile token is single-use. Consume it on submit and reset the widget
+  // so it issues a fresh token for any follow-up claim.
+  function submitClaim() {
+    const current = token;
+    setToken('');
+    turnstileRef.current?.reset();
+    faucet.claim(current);
+  }
 
   if (!chain || chain.kind !== 'testnet') {
     return (
@@ -39,8 +56,9 @@ export function FaucetCard() {
   const drip =
     faucet.dripAmount !== undefined ? formatTokenAmount(faucet.dripAmount, FAUCET_DECIMALS) : '—';
   const onCooldown = secondsRemaining > 0;
-  const busy = faucet.status === 'pending' || faucet.status === 'confirming';
-  const disabled = busy || onCooldown || !faucet.canClaim;
+  const busy =
+    faucet.status === 'requesting' || faucet.status === 'pending' || faucet.status === 'confirming';
+  const disabled = busy || onCooldown || !faucet.canClaim || !token;
 
   return (
     <Card>
@@ -53,9 +71,22 @@ export function FaucetCard() {
         Drips <span className="font-medium">{drip} MFT</span> per claim, once every 24h per address.
       </p>
 
+      {!onCooldown && (
+        <div className="mt-4">
+          <Turnstile
+            ref={turnstileRef}
+            siteKey={SITE_KEY}
+            onSuccess={setToken}
+            onExpire={() => setToken('')}
+            onError={() => setToken('')}
+            options={{ size: 'flexible' }}
+          />
+        </div>
+      )}
+
       <button
         type="button"
-        onClick={faucet.claim}
+        onClick={submitClaim}
         disabled={disabled}
         aria-disabled={disabled}
         className={cn(
@@ -66,12 +97,16 @@ export function FaucetCard() {
         )}
       >
         {busy
-          ? faucet.status === 'pending'
-            ? 'Confirm in wallet…'
-            : 'Claiming…'
+          ? faucet.status === 'requesting'
+            ? 'Verifying…'
+            : faucet.status === 'pending'
+              ? 'Confirm in wallet…'
+              : 'Claiming…'
           : onCooldown
             ? `Available in ${formatDuration(secondsRemaining)}`
-            : 'Claim tokens'}
+            : !token
+              ? 'Complete the captcha'
+              : 'Claim tokens'}
       </button>
 
       <div aria-live="polite" className="mt-3 min-h-5 text-sm">

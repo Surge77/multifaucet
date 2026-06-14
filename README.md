@@ -8,13 +8,12 @@ A production-grade Web3 dashboard that drips testnet ERC-20s from a custom
 on-chain faucet **and** shows a real, read-only multi-chain portfolio with live
 USD values — without ever leaking an API key to the browser.
 
-[Live demo](#) · [Architecture](docs/ARCHITECTURE.md) · [Contracts](docs/CONTRACTS.md) · [Security](docs/SECURITY.md)
+[Live demo](#) · [Security](SECURITY.md)
 
 </div>
 
 > ⚠️ **Status:** under active construction. Deployed addresses and the live demo
-> link land at the end of Phase 2 / deployment. Build order is in
-> [`docs/DECISIONS.md`](docs/DECISIONS.md).
+> link land at the end of Phase 2 / deployment.
 
 ---
 
@@ -80,7 +79,7 @@ public data. MultiFaucet fixes both:
 
 Reads flow through the server (keys hidden, responses cached). Writes are signed
 by the user's wallet and go straight to chain — the server never holds funds or
-keys. Full detail in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+keys.
 
 ## Local setup
 
@@ -113,7 +112,7 @@ forge coverage      # expect 100% on faucet sources
 | `ALCHEMY_API_KEY`                                    | server    | yes         | RPC + balances + transfers |
 | `COINGECKO_API_KEY`                                  | server    | optional    | USD prices (free tier ok)  |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`               | client    | yes         | WalletConnect modal        |
-| `NEXT_PUBLIC_SENTRY_DSN`                             | client    | optional    | error reporting            |
+| `NEXT_PUBLIC_VITALS_URL`                             | client    | optional    | Web Vitals beacon endpoint |
 | `*_RPC_URL`, `DEPLOYER_PRIVATE_KEY`, `*SCAN_API_KEY` | contracts | deploy only | Foundry deploy + verify    |
 
 Only `NEXT_PUBLIC_*` reaches the browser. See [`.env.example`](.env.example).
@@ -127,6 +126,7 @@ Only `NEXT_PUBLIC_*` reaches the browser. See [`.env.example`](.env.example).
 | `npm run typecheck`                      | `tsc --noEmit` (the type gate)   |
 | `npm run lint` / `npm run format`        | ESLint / Prettier                |
 | `npm run test` / `npm run test:coverage` | Vitest                           |
+| `npm run test:e2e`                       | Playwright E2E                   |
 | `forge test` / `forge coverage`          | Contract tests (in `contracts/`) |
 
 ## How the faucet works
@@ -134,18 +134,18 @@ Only `NEXT_PUBLIC_*` reaches the browser. See [`.env.example`](.env.example).
 `TokenFaucet` holds a balance of `MFT` and drips a fixed amount per `claim()`,
 gated by a per-address 24h cooldown enforced with `block.timestamp`. It's
 `Ownable` (fund / set drip / withdraw) and `Pausable`. Reverts use custom errors
-(`CooldownActive`, `FaucetEmpty`). Full reference + invariants in
-[`docs/CONTRACTS.md`](docs/CONTRACTS.md).
+(`CooldownActive`, `FaucetEmpty`).
 
 ## Roadmap
 
 - [x] Plan + scaffold + tooling
-- [ ] Faucet + token contracts (Foundry, 100% coverage) → deploy to 3 testnets
-- [ ] Wallet + chain registry + network switching
-- [ ] Faucet UI (claim + live cooldown)
-- [ ] Server data layer (portfolio / prices / transfers)
-- [ ] Portfolio UI (balances, USD, allocation chart, paste-address)
-- [ ] Polish, a11y, observability, E2E, deploy
+- [x] Faucet + token contracts (Foundry, 100% coverage)
+- [x] Wallet + chain registry + network switching
+- [x] Faucet UI (claim + live cooldown)
+- [x] Server data layer (portfolio / prices / transfers)
+- [x] Portfolio UI (balances, USD, allocation chart, paste-address)
+- [x] Polish, a11y, Web Vitals, Playwright E2E
+- [ ] Deploy contracts to 3 testnets + Vercel production
 
 ## License
 

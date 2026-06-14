@@ -18,10 +18,13 @@ contract Deploy is Script {
     function run() external {
         uint256 pk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address deployer = vm.addr(pk);
+        // Address matching the backend's FAUCET_SIGNER_PRIVATE_KEY; it authorizes
+        // claim vouchers. Keep the private half off-chain in the API only.
+        address signer = vm.envAddress("FAUCET_SIGNER_ADDRESS");
 
         vm.startBroadcast(pk);
         MultiFaucetToken token = new MultiFaucetToken(deployer);
-        TokenFaucet faucet = new TokenFaucet(IERC20(address(token)), DRIP, deployer);
+        TokenFaucet faucet = new TokenFaucet(IERC20(address(token)), DRIP, signer, deployer);
         token.mint(address(faucet), INITIAL_FUNDING);
         vm.stopBroadcast();
 

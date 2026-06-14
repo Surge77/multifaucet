@@ -1,8 +1,14 @@
 import { apiError, apiSuccess } from '@/lib/api';
-import { fetchPrices } from '@/lib/server/coingecko';
+import { enforceRateLimit } from '@/lib/server/http';
+import { fetchPrices } from '@/lib/server/prices';
 import { coingeckoIdsSchema } from '@/lib/validation';
 
+const RATE_LIMIT = 60;
+
 export async function GET(request: Request) {
+  const limited = await enforceRateLimit(request, 'prices', RATE_LIMIT);
+  if (limited) return limited;
+
   const { searchParams } = new URL(request.url);
   const parsed = coingeckoIdsSchema.safeParse(searchParams.get('ids') ?? '');
   if (!parsed.success) {

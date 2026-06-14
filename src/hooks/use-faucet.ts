@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { Hex } from 'viem';
 import {
   useAccount,
   useReadContracts,
@@ -11,8 +12,15 @@ import {
 import { tokenFaucetAbi } from '@/config/abi';
 import { getChain } from '@/config/chains';
 import { unlockTimestamp } from '@/lib/cooldown';
+import type { ApiResponse } from '@/types';
 
-export type ClaimStatus = 'idle' | 'pending' | 'confirming' | 'success' | 'error';
+export type ClaimStatus = 'idle' | 'requesting' | 'pending' | 'confirming' | 'success' | 'error';
+
+interface ClaimVoucher {
+  nonce: string;
+  deadline: string;
+  signature: Hex;
+}
 
 export interface FaucetData {
   /** True when the connected chain has a deployed faucet. */
@@ -22,7 +30,8 @@ export interface FaucetData {
   /** Absolute time the next claim unlocks, or null when claimable now. */
   unlockAtMs: number | null;
   isLoading: boolean;
-  claim: () => void;
+  /** Submit a claim using a Cloudflare Turnstile token. */
+  claim: (turnstileToken: string) => void;
   status: ClaimStatus;
   txHash: `0x${string}` | undefined;
   error: string | null;
@@ -33,6 +42,21 @@ function describeError(error: unknown): string {
     return String((error as { shortMessage: unknown }).shortMessage);
   }
   return 'Transaction failed';
+}
+
+async function requestVoucher(
+  address: string,
+  chainId: number,
+  turnstileToken: string,
+): Promise<ClaimVoucher> {
+  const res = await fetch('/api/faucet-voucher', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ address, chainId, turnstileToken }),
+  });
+  const json = (await res.json()) as ApiResponse<ClaimVoucher>;
+  if (!json.success) throw new Error(json.error.message);
+  return json.data;
 }
 
 export function useFaucet(): FaucetData {
@@ -76,26 +100,51 @@ export function useFaucet(): FaucetData {
   const { writeContract, data: txHash, isPending, error: writeError, reset } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({ hash: txHash });
 
-  // Refresh on-chain reads once the claim is mined.
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [voucherError, setVoucherError] = useState<string | null>(null);
+
+  // Refresh on-chain reads once the claim is mined. Depend on the stable
+  // refetch fn (not the whole `reads` object) to avoid a refetch loop.
+  const { refetch } = reads;
   useEffect(() => {
-    if (receipt.isSuccess) reads.refetch();
-  }, [receipt.isSuccess, reads]);
+    if (receipt.isSuccess) refetch();
+  }, [receipt.isSuccess, refetch]);
 
-  const status: ClaimStatus = writeError
-    ? 'error'
-    : receipt.isSuccess
-      ? 'success'
-      : receipt.isLoading
-        ? 'confirming'
-        : isPending
-          ? 'pending'
-          : 'idle';
+  const status: ClaimStatus =
+    writeError || voucherError
+      ? 'error'
+      : receipt.isSuccess
+        ? 'success'
+        : receipt.isLoading
+          ? 'confirming'
+          : isPending
+            ? 'pending'
+            : isRequesting
+              ? 'requesting'
+              : 'idle';
 
-  function claim() {
-    if (!faucet) return;
-    reset();
-    writeContract({ address: faucet.faucet, abi: tokenFaucetAbi, functionName: 'claim' });
-  }
+  const claim = useCallback(
+    async (turnstileToken: string) => {
+      if (!faucet || !address || chainId === undefined) return;
+      reset();
+      setVoucherError(null);
+      setIsRequesting(true);
+      try {
+        const voucher = await requestVoucher(address, chainId, turnstileToken);
+        writeContract({
+          address: faucet.faucet,
+          abi: tokenFaucetAbi,
+          functionName: 'claim',
+          args: [BigInt(voucher.nonce), BigInt(voucher.deadline), voucher.signature],
+        });
+      } catch (error) {
+        setVoucherError(error instanceof Error ? error.message : 'Could not get a claim voucher');
+      } finally {
+        setIsRequesting(false);
+      }
+    },
+    [faucet, address, chainId, reset, writeContract],
+  );
 
   return {
     isAvailable,
@@ -106,6 +155,6 @@ export function useFaucet(): FaucetData {
     claim,
     status,
     txHash,
-    error: writeError ? describeError(writeError) : null,
+    error: voucherError ?? (writeError ? describeError(writeError) : null),
   };
 }

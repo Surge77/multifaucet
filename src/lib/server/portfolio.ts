@@ -1,10 +1,11 @@
 import { type Address, erc20Abi } from 'viem';
 
-import { getChain } from '@/config/chains';
+import { getChain, MAINNET_CHAINS } from '@/config/chains';
 import { sumUsd, valueBalance } from '@/lib/portfolio-math';
 import type { ChainPortfolio, NativeBalance, TokenBalance } from '@/types';
 
-import { fetchPrices } from './coingecko';
+import { logError } from './logger';
+import { fetchPrices } from './prices';
 import { publicClientFor } from './rpc';
 
 const NATIVE_DECIMALS = 18;
@@ -19,7 +20,17 @@ export async function getChainPortfolio(
 
   const tokens = chain.trackedTokens;
 
-  const [nativeRaw, tokenResults] = await Promise.all([
+  // Price ids derive from static chain config, so prices can be fetched
+  // concurrently with the on-chain balance reads instead of after them.
+  const priceIds = Array.from(
+    new Set(
+      [chain.nativeCoingeckoId, ...tokens.map((t) => t.coingeckoId)].filter((id): id is string =>
+        Boolean(id),
+      ),
+    ),
+  );
+
+  const [nativeRaw, tokenResults, prices] = await Promise.all([
     client.getBalance({ address }),
     tokens.length
       ? client.multicall({
@@ -32,16 +43,8 @@ export async function getChainPortfolio(
           })),
         })
       : Promise.resolve([]),
+    fetchPrices(priceIds),
   ]);
-
-  const priceIds = Array.from(
-    new Set(
-      [chain.nativeCoingeckoId, ...tokens.map((t) => t.coingeckoId)].filter((id): id is string =>
-        Boolean(id),
-      ),
-    ),
-  );
-  const prices = await fetchPrices(priceIds);
 
   const nativeValued = valueBalance(
     nativeRaw,
@@ -60,4 +63,20 @@ export async function getChainPortfolio(
   const totalUsd = sumUsd([native.usdValue, ...tokenBalances.map((t) => t.usdValue)]);
 
   return { chainId, chainName: chain.name, native, tokens: tokenBalances, totalUsd };
+}
+
+/**
+ * Portfolios across every mainnet for `address`, fetched concurrently. A single
+ * failing chain is logged and dropped rather than failing the whole request, so
+ * the client makes one round-trip instead of one per chain.
+ */
+export async function getAllMainnetPortfolios(address: Address): Promise<ChainPortfolio[]> {
+  const results = await Promise.allSettled(
+    MAINNET_CHAINS.map((chain) => getChainPortfolio(address, chain.id)),
+  );
+  return results.flatMap((result, i) => {
+    if (result.status === 'fulfilled') return [result.value];
+    logError('portfolio.chain', result.reason, { chainId: MAINNET_CHAINS[i]!.id });
+    return [];
+  });
 }

@@ -35,5 +35,4 @@ npm run test:coverage
 cd contracts && forge test && forge coverage
 ```
 
-All green → open the PR. Reviews look for correctness, the gates above, and
-adherence to [`AGENTS.md`](AGENTS.md).
+All green → open the PR. Reviews look for correctness and the gates above.
