@@ -19,7 +19,17 @@ export async function getChainPortfolio(
 
   const tokens = chain.trackedTokens;
 
-  const [nativeRaw, tokenResults] = await Promise.all([
+  // Price ids derive from static chain config, so prices can be fetched
+  // concurrently with the on-chain balance reads instead of after them.
+  const priceIds = Array.from(
+    new Set(
+      [chain.nativeCoingeckoId, ...tokens.map((t) => t.coingeckoId)].filter((id): id is string =>
+        Boolean(id),
+      ),
+    ),
+  );
+
+  const [nativeRaw, tokenResults, prices] = await Promise.all([
     client.getBalance({ address }),
     tokens.length
       ? client.multicall({
@@ -32,16 +42,8 @@ export async function getChainPortfolio(
           })),
         })
       : Promise.resolve([]),
+    fetchPrices(priceIds),
   ]);
-
-  const priceIds = Array.from(
-    new Set(
-      [chain.nativeCoingeckoId, ...tokens.map((t) => t.coingeckoId)].filter((id): id is string =>
-        Boolean(id),
-      ),
-    ),
-  );
-  const prices = await fetchPrices(priceIds);
 
   const nativeValued = valueBalance(
     nativeRaw,
