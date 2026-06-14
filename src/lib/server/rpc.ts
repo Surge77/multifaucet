@@ -21,7 +21,7 @@ const VIEM_CHAINS = {
   [arbitrumSepolia.id]: arbitrumSepolia,
 } as const;
 
-const ALCHEMY_NETWORK: Record<number, string> = {
+export const ALCHEMY_NETWORK: Record<number, string> = {
   [mainnet.id]: 'eth-mainnet',
   [base.id]: 'base-mainnet',
   [arbitrum.id]: 'arb-mainnet',

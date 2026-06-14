@@ -2,11 +2,14 @@ import { type Address, erc20Abi } from 'viem';
 
 import { getChain, MAINNET_CHAINS } from '@/config/chains';
 import { sumUsd, valueBalance } from '@/lib/portfolio-math';
+import { mergeTokenBalances } from '@/lib/token-merge';
 import type { ChainPortfolio, NativeBalance, TokenBalance } from '@/types';
 
+import { fetchAlchemyPricesByAddress } from './alchemy-prices';
 import { logError } from './logger';
 import { fetchPrices } from './prices';
 import { publicClientFor } from './rpc';
+import { discoverTokens } from './token-discovery';
 
 const NATIVE_DECIMALS = 18;
 
@@ -30,7 +33,8 @@ export async function getChainPortfolio(
     ),
   );
 
-  const [nativeRaw, tokenResults, prices] = await Promise.all([
+  // Curated reads, CoinGecko prices, and token discovery all run concurrently.
+  const [nativeRaw, tokenResults, prices, discovered] = await Promise.all([
     client.getBalance({ address }),
     tokens.length
       ? client.multicall({
@@ -44,6 +48,7 @@ export async function getChainPortfolio(
         })
       : Promise.resolve([]),
     fetchPrices(priceIds),
+    discoverTokens(address, chainId),
   ]);
 
   const nativeValued = valueBalance(
@@ -53,13 +58,30 @@ export async function getChainPortfolio(
   );
   const native: NativeBalance = { symbol: chain.nativeSymbol, ...nativeValued };
 
-  const tokenBalances: TokenBalance[] = tokens.map((token, i) => {
+  const curatedBalances: TokenBalance[] = tokens.map((token, i) => {
     const result = tokenResults[i];
     const raw = result && result.status === 'success' ? (result.result as bigint) : 0n;
     const price = token.coingeckoId ? (prices[token.coingeckoId] ?? null) : null;
     return { token, ...valueBalance(raw, token.decimals, price) };
   });
 
+  // Discovered tokens have no CoinGecko id, so price them by contract address.
+  const discoveredPrices = discovered.length
+    ? await fetchAlchemyPricesByAddress(
+        chainId,
+        discovered.map((d) => d.token.address),
+      )
+    : {};
+  const discoveredBalances: TokenBalance[] = discovered.map((d) => ({
+    token: d.token,
+    ...valueBalance(
+      d.raw,
+      d.token.decimals,
+      discoveredPrices[d.token.address.toLowerCase()] ?? null,
+    ),
+  }));
+
+  const tokenBalances = mergeTokenBalances(curatedBalances, discoveredBalances);
   const totalUsd = sumUsd([native.usdValue, ...tokenBalances.map((t) => t.usdValue)]);
 
   return { chainId, chainName: chain.name, native, tokens: tokenBalances, totalUsd };
