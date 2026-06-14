@@ -13,6 +13,8 @@ const BLOCK_TIME_SEC: Record<number, number> = {
   1: 12, // Ethereum
   8453: 2, // Base
   42161: 0.25, // Arbitrum One
+  10: 2, // OP Mainnet
+  137: 2, // Polygon
   11155111: 12, // Ethereum Sepolia
   84532: 2, // Base Sepolia
   421614: 0.25, // Arbitrum Sepolia

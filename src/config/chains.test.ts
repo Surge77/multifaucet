@@ -11,15 +11,24 @@ import {
 } from './chains';
 
 describe('chain registry', () => {
-  it('exposes 3 testnets and 3 mainnets', () => {
+  it('exposes 3 testnets and 5 mainnets', () => {
     expect(TESTNET_CHAINS).toHaveLength(3);
-    expect(MAINNET_CHAINS).toHaveLength(3);
-    expect(SUPPORTED_CHAINS).toHaveLength(6);
+    expect(MAINNET_CHAINS).toHaveLength(5);
+    expect(SUPPORTED_CHAINS).toHaveLength(8);
   });
 
   it('looks up a chain by id', () => {
     expect(getChain(1)?.name).toBe('Ethereum');
     expect(getChain(11155111)?.name).toBe('Ethereum Sepolia');
+  });
+
+  it('includes the newly added mainnets', () => {
+    expect(getChain(10)?.name).toBe('OP Mainnet');
+    expect(getChain(137)?.name).toBe('Polygon');
+    expect(getChain(137)?.nativeSymbol).toBe('POL');
+    const mainnetIds = MAINNET_CHAINS.map((c) => c.id);
+    expect(mainnetIds).toContain(10);
+    expect(mainnetIds).toContain(137);
   });
 
   it('returns undefined for an unknown chain', () => {

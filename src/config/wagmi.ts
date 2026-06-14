@@ -1,6 +1,15 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { http } from 'wagmi';
-import { arbitrum, arbitrumSepolia, base, baseSepolia, mainnet, sepolia } from 'viem/chains';
+import {
+  arbitrum,
+  arbitrumSepolia,
+  base,
+  baseSepolia,
+  mainnet,
+  optimism,
+  polygon,
+  sepolia,
+} from 'viem/chains';
 
 // WalletConnect Cloud project id. Required for the WalletConnect connector;
 // injected/Coinbase wallets still work without it during local dev.
@@ -12,11 +21,13 @@ export const wagmiConfig = getDefaultConfig({
   appName: 'MultiFaucet',
   projectId,
   ssr: true,
-  chains: [mainnet, base, arbitrum, sepolia, baseSepolia, arbitrumSepolia],
+  chains: [mainnet, base, arbitrum, optimism, polygon, sepolia, baseSepolia, arbitrumSepolia],
   transports: {
     [mainnet.id]: http(),
     [base.id]: http(),
     [arbitrum.id]: http(),
+    [optimism.id]: http(),
+    [polygon.id]: http(),
     [sepolia.id]: http(),
     [baseSepolia.id]: http(),
     [arbitrumSepolia.id]: http(),

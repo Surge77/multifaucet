@@ -1,10 +1,21 @@
 import { type Chain, createPublicClient, http, type PublicClient } from 'viem';
-import { arbitrum, arbitrumSepolia, base, baseSepolia, mainnet, sepolia } from 'viem/chains';
+import {
+  arbitrum,
+  arbitrumSepolia,
+  base,
+  baseSepolia,
+  mainnet,
+  optimism,
+  polygon,
+  sepolia,
+} from 'viem/chains';
 
 const VIEM_CHAINS = {
   [mainnet.id]: mainnet,
   [base.id]: base,
   [arbitrum.id]: arbitrum,
+  [optimism.id]: optimism,
+  [polygon.id]: polygon,
   [sepolia.id]: sepolia,
   [baseSepolia.id]: baseSepolia,
   [arbitrumSepolia.id]: arbitrumSepolia,
@@ -14,6 +25,8 @@ const ALCHEMY_NETWORK: Record<number, string> = {
   [mainnet.id]: 'eth-mainnet',
   [base.id]: 'base-mainnet',
   [arbitrum.id]: 'arb-mainnet',
+  [optimism.id]: 'opt-mainnet',
+  [polygon.id]: 'polygon-mainnet',
   [sepolia.id]: 'eth-sepolia',
   [baseSepolia.id]: 'base-sepolia',
   [arbitrumSepolia.id]: 'arb-sepolia',
