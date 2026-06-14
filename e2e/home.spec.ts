@@ -2,10 +2,15 @@ import { expect, test, type Page } from '@playwright/test';
 
 const VALID_ADDRESS = '0x1111111111111111111111111111111111111111';
 const PER_CHAIN_USD = 1000;
+const MAINNET_CHAIN_IDS = [1, 8453, 42161];
 const EXPECTED_TOTAL = '$3,000.00'; // 3 mainnets * $1,000 each
 
 function envelope<T>(data: T) {
   return { success: true, data, timestamp: new Date().toISOString() };
+}
+
+function errorEnvelope(code: string, message: string) {
+  return { success: false, error: { code, message }, timestamp: new Date().toISOString() };
 }
 
 function chainPortfolio(chainId: number) {
@@ -18,10 +23,11 @@ function chainPortfolio(chainId: number) {
   };
 }
 
+// The client now requests every mainnet in one call, so the handler returns an
+// array of per-chain portfolios.
 async function stubPortfolioApi(page: Page) {
   await page.route('**/api/portfolio**', async (route) => {
-    const chainId = Number(new URL(route.request().url()).searchParams.get('chainId'));
-    await route.fulfill({ json: envelope(chainPortfolio(chainId)) });
+    await route.fulfill({ json: envelope(MAINNET_CHAIN_IDS.map(chainPortfolio)) });
   });
   await page.route('**/api/prices**', (route) => route.fulfill({ json: envelope({}) }));
 }
@@ -56,4 +62,31 @@ test('portfolio shows totals for a pasted address', async ({ page }) => {
 
   await expect(page.getByText('Total value')).toBeVisible();
   await expect(page.getByText(EXPECTED_TOTAL)).toBeVisible();
+});
+
+test('portfolio shows a zero total for an address with no holdings', async ({ page }) => {
+  await page.route('**/api/portfolio**', (route) => route.fulfill({ json: envelope([]) }));
+  await page.route('**/api/prices**', (route) => route.fulfill({ json: envelope({}) }));
+  await page.goto('/');
+
+  await page.getByRole('tab', { name: 'Portfolio' }).click();
+  await page.getByLabel('Address').fill(VALID_ADDRESS);
+
+  await expect(page.getByText('Total value')).toBeVisible();
+  await expect(page.getByText('$0.00')).toBeVisible();
+});
+
+test('portfolio surfaces an error when the API fails', async ({ page }) => {
+  await page.route('**/api/portfolio**', (route) =>
+    route.fulfill({
+      status: 502,
+      json: errorEnvelope('PORTFOLIO_ERROR', 'Failed to load balances'),
+    }),
+  );
+  await page.goto('/');
+
+  await page.getByRole('tab', { name: 'Portfolio' }).click();
+  await page.getByLabel('Address').fill(VALID_ADDRESS);
+
+  await expect(page.getByText(/couldn.t load balances/i)).toBeVisible();
 });

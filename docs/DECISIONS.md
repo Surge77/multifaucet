@@ -80,3 +80,42 @@ server-side and cached.
 
 **Consequences.** One provider covers all six networks with consistent APIs.
 Free-tier limits handled by caching and graceful price-unavailable degradation.
+
+---
+
+## ADR-006 — Server hardening: rate limit, shared cache, price fallback
+
+**Date:** 2026-06-14 · **Status:** accepted
+
+**Context.** The public Route Handlers were unmetered and proxied straight to
+Alchemy/CoinGecko; the price cache was per-instance (`TtlCache`), so serverless
+cold starts caused upstream stampedes; the transfer scan started at genesis; the
+client fetched one portfolio request per chain; failures were swallowed silently.
+
+**Decision.** (1) Per-IP fixed-window rate limit on every handler. (2) Replace
+the in-memory cache with the Next.js Data Cache (`next.revalidate`), shared
+across instances on Vercel. (3) Bound transfer scans to ~30 days of blocks.
+(4) Aggregate all mainnets in one `/api/portfolio` request. (5) Add Alchemy
+Prices as a CoinGecko fallback, reusing the existing key. (6) Structured server
+logging in place of silent `catch {}`.
+
+**Consequences.** No new dependencies or external infrastructure. The rate limit
+is per-instance (best-effort), not a global quota — a distributed limiter would
+need an external store, deferred until traffic justifies it.
+
+---
+
+## ADR-007 — Faucet sybil-resistance deferred
+
+**Date:** 2026-06-14 · **Status:** deferred
+
+**Context.** `TokenFaucet` keys its 24h cooldown per address, so a new address
+yields a fresh claim. This is the intended v1 design for a testnet faucet.
+
+**Decision.** Defer on-chain sybil mitigation (allowlist / Merkle / signature or
+captcha gating). It requires a contract change + redeploy to all three testnets
+and re-establishing 100% coverage; the claim path is signed client-side directly
+to the contract, so there is no API layer to gate cheaply.
+
+**Consequences.** Faucet remains trivially farmable by spinning up addresses —
+acceptable for testnet tokens. Revisit if abuse drains funded balances.
