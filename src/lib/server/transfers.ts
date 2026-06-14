@@ -41,7 +41,12 @@ interface TransferParams {
   toAddress?: Address;
 }
 
-async function rpcCall<T>(url: string, method: string, params: unknown[]): Promise<T | undefined> {
+/** Generic Alchemy JSON-RPC call. Returns `undefined` on a non-OK response. */
+export async function rpcCall<T>(
+  url: string,
+  method: string,
+  params: unknown[],
+): Promise<T | undefined> {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -67,7 +72,7 @@ async function queryTransfers(url: string, params: TransferParams): Promise<Alch
  * never ask Alchemy to consider the full chain history. Falls back to genesis
  * when the latest block can't be read.
  */
-async function recentFromBlock(url: string, chainId: number): Promise<string> {
+export async function recentFromBlock(url: string, chainId: number): Promise<string> {
   const blockTime = BLOCK_TIME_SEC[chainId];
   const latestHex = await rpcCall<string>(url, 'eth_blockNumber', []);
   if (!blockTime || !latestHex) return '0x0';

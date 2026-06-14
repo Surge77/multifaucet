@@ -10,6 +10,8 @@ import { explorerTxUrl, getChain } from '@/config/chains';
 import { formatDuration, formatTokenAmount } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
+import { ClaimHistory } from './claim-history';
+
 const FAUCET_DECIMALS = 18;
 // Cloudflare "always passes" test key; real key comes from env in production.
 const TEST_SITE_KEY = '1x00000000000000000000AA';
@@ -124,6 +126,8 @@ export function FaucetCard() {
           <span className="text-red-600 dark:text-red-400">{faucet.error}</span>
         )}
       </div>
+
+      <ClaimHistory />
     </Card>
   );
 }
