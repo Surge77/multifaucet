@@ -17,13 +17,13 @@ export function ClaimHistory() {
   if (!chain || (!isLoading && claims.length === 0)) return null;
 
   return (
-    <div className="mt-6 border-t border-black/10 pt-4 dark:border-white/10">
-      <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
+    <div className="border-line mt-7 border-t border-dashed pt-4">
+      <h3 className="text-inkmute font-mono text-[10px] tracking-[0.28em] uppercase">
         Your recent claims
       </h3>
-      <ul className="mt-2 space-y-1">
+      <ul className="mt-3 space-y-1.5">
         {claims.map((claim) => (
-          <li key={claim.txHash} className="flex items-center justify-between text-sm">
+          <li key={claim.txHash} className="flex items-center justify-between font-mono text-sm">
             <span className="tabular-nums">
               {formatTokenAmount(BigInt(claim.amount), FAUCET_DECIMALS)} MFT
             </span>
@@ -31,7 +31,7 @@ export function ClaimHistory() {
               href={explorerTxUrl(chain.id, claim.txHash)}
               target="_blank"
               rel="noreferrer"
-              className="text-neutral-500 hover:underline"
+              className="text-inkmute hover:text-accent transition-colors hover:underline"
             >
               {new Date(claim.timestamp * 1000).toLocaleDateString()} ↗
             </a>

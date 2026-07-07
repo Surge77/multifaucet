@@ -12,11 +12,21 @@ import { wagmiConfig } from '@/config/wagmi';
 
 function RainbowKit({ children }: { children: ReactNode }) {
   const { resolvedTheme } = useTheme();
+  // Match the field-ledger palette: vermilion accent, near-square corners.
+  const theme =
+    resolvedTheme === 'light'
+      ? lightTheme({
+          accentColor: '#bf3f1c',
+          accentColorForeground: '#faf6ec',
+          borderRadius: 'small',
+        })
+      : darkTheme({
+          accentColor: '#e05a2b',
+          accentColorForeground: '#16120d',
+          borderRadius: 'small',
+        });
   return (
-    <RainbowKitProvider
-      theme={resolvedTheme === 'light' ? lightTheme() : darkTheme()}
-      modalSize="compact"
-    >
+    <RainbowKitProvider theme={theme} modalSize="compact">
       {children}
     </RainbowKitProvider>
   );

@@ -11,9 +11,9 @@ import { cn } from '@/lib/utils';
 
 type Mode = 'faucet' | 'portfolio';
 
-const MODES: { id: Mode; label: string }[] = [
-  { id: 'faucet', label: 'Faucet' },
-  { id: 'portfolio', label: 'Portfolio' },
+const MODES: { id: Mode; index: string; label: string }[] = [
+  { id: 'faucet', index: '01', label: 'Faucet' },
+  { id: 'portfolio', index: '02', label: 'Portfolio' },
 ];
 
 export function Dashboard() {
@@ -21,15 +21,11 @@ export function Dashboard() {
   const { isConnected } = useAccount();
 
   return (
-    <section className="mx-auto w-full max-w-5xl px-4 py-8">
+    <section className="rise rise-3 mx-auto w-full max-w-5xl px-4 py-10">
       <WrongNetworkBanner />
 
-      <div
-        role="tablist"
-        aria-label="Dashboard mode"
-        className="inline-flex rounded-xl border border-black/10 p-1 dark:border-white/15"
-      >
-        {MODES.map(({ id, label }) => (
+      <div role="tablist" aria-label="Dashboard mode" className="border-line flex gap-8 border-b">
+        {MODES.map(({ id, index, label }) => (
           <button
             key={id}
             id={`tab-${id}`}
@@ -38,13 +34,16 @@ export function Dashboard() {
             aria-controls="dashboard-panel"
             onClick={() => setMode(id)}
             className={cn(
-              'rounded-lg px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+              'focus-visible:outline-accent -mb-px flex items-baseline gap-2 border-b-2 pb-3 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4',
               mode === id
-                ? 'bg-violet-600 text-white'
-                : 'text-neutral-600 hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-white/10',
+                ? 'border-accent text-ink'
+                : 'text-inkmute hover:text-ink border-transparent',
             )}
           >
-            {label}
+            <span aria-hidden className="text-accent font-mono text-[10px] tracking-[0.2em]">
+              {index}
+            </span>
+            <span className="font-display text-lg">{label}</span>
           </button>
         ))}
       </div>
@@ -68,8 +67,9 @@ export function Dashboard() {
 
 function EmptyState() {
   return (
-    <div className="rounded-2xl border border-dashed border-black/15 p-10 text-center text-neutral-500 dark:border-white/15">
-      Connect a wallet to claim testnet tokens.
+    <div className="border-linestrong border border-dashed p-12 text-center">
+      <p className="text-inkmute font-mono text-[10px] tracking-[0.28em] uppercase">No signal</p>
+      <p className="font-display mt-3 text-xl">Connect a wallet to claim testnet tokens.</p>
     </div>
   );
 }
