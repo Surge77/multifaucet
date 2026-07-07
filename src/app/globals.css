@@ -4,27 +4,185 @@
    instead of the default prefers-color-scheme media query. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ---------------------------------------------------------------------------
+   Field-ledger palette. Light = survey paper & ink. Dark = night station.
+--------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f2ecdf;
+  --surface: #faf6ec;
+  --surface-2: #e9e1cf;
+  --ink: #1e1a14;
+  --ink-muted: #6f6656;
+  --line: rgba(30, 26, 20, 0.16);
+  --line-strong: rgba(30, 26, 20, 0.45);
+  --accent: #bf3f1c;
+  --accent-ink: #faf6ec;
+  --teal: #175e54;
+  --ochre: #8f6a10;
+  --danger: #a8321a;
+  --grain-opacity: 0.05;
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --bg: #131110;
+  --surface: #1b1815;
+  --surface-2: #26221c;
+  --ink: #ece4d2;
+  --ink-muted: #988d7a;
+  --line: rgba(236, 228, 210, 0.14);
+  --line-strong: rgba(236, 228, 210, 0.42);
+  --accent: #e05a2b;
+  --accent-ink: #16120d;
+  --teal: #5aa896;
+  --ochre: #d3a13d;
+  --danger: #e2604a;
+  --grain-opacity: 0.07;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-inkmute: var(--ink-muted);
+  --color-line: var(--line);
+  --color-linestrong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accentink: var(--accent-ink);
+  --color-teal: var(--teal);
+  --color-ochre: var(--ochre);
+  --color-danger: var(--danger);
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-archivo);
+  --font-mono: var(--font-plex-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans), Georgia, serif;
+}
+
+/* Paper grain: one fixed noise layer over everything, never interactive. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------------------------------------------------------------------------
+   Plates: cards drawn like sheets on a drafting table — hairline frame with
+   crop marks on opposite corners.
+--------------------------------------------------------------------------- */
+.plate {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.plate::before,
+.plate::after {
+  content: '';
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  pointer-events: none;
+}
+
+.plate::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid var(--line-strong);
+  border-left: 1px solid var(--line-strong);
+}
+
+.plate::after {
+  right: -1px;
+  bottom: -1px;
+  border-right: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+/* Staggered page-load reveal. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.rise-1 {
+  animation-delay: 0.08s;
+}
+.rise-2 {
+  animation-delay: 0.16s;
+}
+.rise-3 {
+  animation-delay: 0.26s;
+}
+.rise-4 {
+  animation-delay: 0.36s;
+}
+
+/* Droplets on the hero schematic. */
+@keyframes drip {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(6px) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(64px) scale(1);
+    opacity: 0;
+  }
+}
+
+.drip {
+  animation: drip 2.4s ease-in infinite;
+  transform-origin: center;
+}
+
+.drip-2 {
+  animation-delay: 0.8s;
+}
+.drip-3 {
+  animation-delay: 1.6s;
+}
+
+/* Chain ticker strip. */
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-track {
+  animation: ticker 36s linear infinite;
+}
+
+.ticker:hover .ticker-track {
+  animation-play-state: paused;
 }
 
 @media (prefers-reduced-motion: reduce) {

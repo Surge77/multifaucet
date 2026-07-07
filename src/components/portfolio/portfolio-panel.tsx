@@ -33,8 +33,11 @@ export function PortfolioPanel() {
   const [watchlist, setWatchlist] = useLocalStorage<WatchEntry[]>('mf-watchlist', EMPTY_WATCHLIST);
 
   return (
-    <div className="rounded-2xl border border-black/10 p-6 dark:border-white/10">
-      <label htmlFor="portfolio-address" className="text-sm font-medium">
+    <div className="plate p-6 sm:p-7">
+      <label
+        htmlFor="portfolio-address"
+        className="text-inkmute font-mono text-[10px] tracking-[0.28em] uppercase"
+      >
         Address
       </label>
       <input
@@ -44,7 +47,7 @@ export function PortfolioPanel() {
         placeholder={connected ? shortenAddress(connected) : '0x… or paste any address'}
         spellCheck={false}
         autoComplete="off"
-        className="mt-1 w-full rounded-xl border border-black/10 bg-transparent px-3 py-2 font-mono text-sm outline-none focus:border-violet-500 dark:border-white/15"
+        className="border-linestrong placeholder:text-inkmute focus:border-accent mt-2 w-full border-b bg-transparent py-2 font-mono text-sm outline-none"
       />
 
       <Watchlist
@@ -56,19 +59,21 @@ export function PortfolioPanel() {
       />
 
       {!validAddress ? (
-        <p className="mt-6 text-sm text-neutral-500">
+        <p className="text-inkmute mt-6 text-sm">
           Connect a wallet or paste any address to view a read-only portfolio across Ethereum, Base,
           and Arbitrum.
         </p>
       ) : isError ? (
-        <p className="mt-6 text-sm text-red-600 dark:text-red-400">
+        <p className="text-danger mt-6 font-mono text-sm">
           Couldn&apos;t load balances. Check the address or try again.
         </p>
       ) : (
         <>
-          <div className="mt-6 flex items-baseline justify-between">
-            <span className="text-sm text-neutral-500">Total value</span>
-            <span className="text-2xl font-bold tabular-nums">
+          <div className="border-line mt-7 flex items-baseline justify-between border-t border-dashed pt-5">
+            <span className="text-inkmute font-mono text-[10px] tracking-[0.28em] uppercase">
+              Total value
+            </span>
+            <span className="font-mono text-3xl font-semibold tracking-tight tabular-nums">
               {isLoading && perChain.length === 0 ? '—' : formatUsd(totalUsd)}
             </span>
           </div>
@@ -96,7 +101,7 @@ function Skeleton() {
   return (
     <div className="space-y-3" aria-hidden>
       {[0, 1, 2].map((i) => (
-        <div key={i} className="h-10 animate-pulse rounded-lg bg-black/5 dark:bg-white/10" />
+        <div key={i} className="bg-surface2 h-10 animate-pulse" />
       ))}
     </div>
   );

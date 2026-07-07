@@ -34,13 +34,13 @@ export function Watchlist({ entries, activeAddress, onSelect, onSave, onRemove }
             onChange={(e) => setLabel(e.target.value)}
             placeholder="Label (optional)"
             disabled={!canSave}
-            className="min-w-0 flex-1 rounded-lg border border-black/10 bg-transparent px-2 py-1.5 text-sm outline-none focus:border-violet-500 disabled:opacity-50 dark:border-white/15"
+            className="border-line placeholder:text-inkmute focus:border-accent min-w-0 flex-1 border bg-transparent px-3 py-1.5 font-mono text-sm outline-none disabled:opacity-50"
           />
           <button
             type="button"
             onClick={handleSave}
             disabled={!canSave}
-            className="shrink-0 rounded-lg border border-black/10 px-3 py-1.5 text-sm font-medium hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/15 dark:hover:bg-white/10"
+            className="border-linestrong hover:bg-ink hover:text-bg shrink-0 border px-3 py-1.5 font-mono text-[11px] tracking-[0.14em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-inherit"
           >
             {canSave ? 'Save address' : 'Saved'}
           </button>
@@ -52,12 +52,12 @@ export function Watchlist({ entries, activeAddress, onSelect, onSave, onRemove }
           {entries.map((entry) => (
             <li
               key={entry.address}
-              className="flex items-center gap-1 rounded-full border border-black/10 pr-1 pl-3 text-sm dark:border-white/15"
+              className="border-line flex items-center gap-1 border pr-1 pl-3 font-mono text-sm"
             >
               <button
                 type="button"
                 onClick={() => onSelect(entry.address)}
-                className="py-1 font-medium hover:text-violet-600 dark:hover:text-violet-400"
+                className="hover:text-accent py-1 font-medium transition-colors"
               >
                 {entry.label ?? shortenAddress(entry.address)}
               </button>
@@ -65,7 +65,7 @@ export function Watchlist({ entries, activeAddress, onSelect, onSave, onRemove }
                 type="button"
                 aria-label={`Remove ${entry.label ?? entry.address}`}
                 onClick={() => onRemove(entry.address)}
-                className="flex size-5 items-center justify-center rounded-full text-neutral-500 hover:bg-black/10 hover:text-red-600 dark:hover:bg-white/10"
+                className="text-inkmute hover:bg-surface2 hover:text-danger flex size-5 items-center justify-center transition-colors"
               >
                 ×
               </button>
